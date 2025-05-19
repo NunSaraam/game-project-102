@@ -11,7 +11,7 @@ public class DraggableRank : MonoBehaviour
 
     public bool isDragging = false;             //현재 드래그 중인지
     public Vector3 originalPosition;            //원래 위치
-    public GridCell currentCell;                //현재 위치 
+    public GridCell currentCell;                //현재 위치한 칸
 
     public Camera mainCamera;                   //메인 카메라
     public Vector3 dragOffset;                  //드래그 시 오프셋 (보정값)
@@ -23,7 +23,7 @@ public class DraggableRank : MonoBehaviour
         //필요한 컴포넌트 가져오기
         mainCamera = Camera.main;
         spriteRenderer = GetComponent<SpriteRenderer>();
-        gamemanager = FindAnyObjectByType<GameManager>();
+        gamemanager = FindObjectOfType<GameManager>();
     }
 
     void Start()
@@ -70,15 +70,22 @@ public class DraggableRank : MonoBehaviour
 
         if (targetCell != null )                    //빈 칸인 경우 - 이동
         {
-            MoveToCell(targetCell);
-        }
-        else if (targetCell.currentRank != this && targetCell.currentRank.rankLevel == rankLevel)       //같은 랭크일 경우
-        {
-            MergeWithCell(targetCell);
+            if (targetCell.currentRank == null)
+            {
+                MoveToCell(targetCell);
+            }
+            else if (targetCell.currentRank != this && targetCell.currentRank.rankLevel == rankLevel)       //같은 랭크일 경우
+            {
+                MergeWithCell(targetCell);
+            }
+            else
+            {
+                ReturnToOriginalPosition();
+            }
         }
         else
         {
-            ReturnToOriginalPosition();
+            ReturnToOriginalPosition();         //유효한 칸이 없으면 위치로 복귀
         }
     }
 
@@ -93,18 +100,18 @@ public class DraggableRank : MonoBehaviour
         currentCell = targetCell;           //새 칸으로 이동
         targetCell.currentRank = this;
 
-        originalPosition = new Vector3(targetCell.transform.position.x, targetCell.transform.position.y, 0);
+        originalPosition = new Vector3(targetCell.transform.position.x, targetCell.transform.position.y, 0f);
         transform.position = originalPosition;
     }
 
 
     public void ReturnToOriginalPosition()      //원래 위치로 돌아가는 함수
     {
-
+        transform.position = originalPosition;
     }
 
 
-    public void MergeWithCell (GridCell targetCell)
+    public void MergeWithCell(GridCell targetCell)
     {
         if (targetCell.currentRank == null || targetCell.currentRank.rankLevel != rankLevel)
         {
@@ -117,7 +124,6 @@ public class DraggableRank : MonoBehaviour
             currentCell.currentRank = null;     //기존 칸에서 제거
         }
 
-        //합치기 실행 MergeRanks 함수를 통해서 실행
         gamemanager.MergeRanks(this, targetCell.currentRank);
 
     }

@@ -18,7 +18,7 @@ public class GameManager : MonoBehaviour
 
     public GridCell[,] grid;            //모든 칸을 저장하는 2차원 배열
 
-    void InitializeGrid()
+    void InitializeGrid()               //그리드 초기화
     {
         grid = new GridCell[gridWidth, gridHeight];
 
@@ -29,7 +29,7 @@ public class GameManager : MonoBehaviour
                 Vector3 position = new Vector3(
                     x * cellSize - (gridWidth * cellSize / 2) + cellSize / 2,
                     y * cellSize - (gridHeight * cellSize / 2) + cellSize / 2,
-                    0.1f
+                    1f
                  );
 
                 GameObject cellObj = Instantiate(cellPrefabs, position, Quaternion.identity, gridContainer);
@@ -67,10 +67,10 @@ public class GameManager : MonoBehaviour
 
         level = Mathf.Clamp(level, 1, maxRankLevel);        //레벨 넘위 확인
 
-        Vector3 rankPosition = new Vector3(cell.transform.position.x, cell.transform.position.y, 0);
+        Vector3 rankPosition = new Vector3(cell.transform.position.x, cell.transform.position.y, 0f);        //계급장 위치 설정
         
         //드래그 가능한 계급장 컴포넌트 추가
-        GameObject rankObj = Instantiate(rankPrefabs, rankPosition,Quaternion.identity, gridContainer);
+        GameObject rankObj = Instantiate(rankPrefabs, rankPosition, Quaternion.identity, gridContainer);
         rankObj.name = "Rank_Level" + level;
 
         DraggableRank rank = rankObj.AddComponent<DraggableRank>();
@@ -85,7 +85,7 @@ public class GameManager : MonoBehaviour
     {
         List<GridCell> emptyCells = new List<GridCell>();        //빈 칸들을 저장할 리스트
 
-        for (int x = 0; x < gridWidth; x++)
+        for (int x = 0; x < gridWidth; x++)             //모든 칸을 검사
         {
             for (int y = 0; y < gridHeight; y++)
             { 
@@ -96,7 +96,7 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        if (emptyCells.Count == 0)
+        if (emptyCells.Count == 0)          //빈칸이 없으면 null 값 반환
         {
             return null;
         }
@@ -107,12 +107,12 @@ public class GameManager : MonoBehaviour
 
     public bool SpawnNewRank()          //새 계급장 생성
     {
-        GridCell empttCell = FindEnptyCell();       //1. 비어있는 칸 찾기
-        if (empttCell == null) return false;        //2. 비어있는 칸이 없으면 실패
+        GridCell emptyCell = FindEnptyCell();       //1. 비어있는 칸 찾기
+        if (emptyCell == null) return false;        //2. 비어있는 칸이 없으면 실패
 
         int rankLevel = Random.Range(0, 100) < 80 ? 1 : 2;  //80% 확률로 레벨 1, 20%확률로 레벨 2
 
-        CreateRankInCell(empttCell, rankLevel);     //3. 계급장 생성 및 설정
+        CreateRankInCell(emptyCell, rankLevel);     //3. 계급장 생성 및 설정
 
         return true;
     }
@@ -123,7 +123,10 @@ public class GameManager : MonoBehaviour
         {
             for (int y = 0; y < gridHeight; y++)
             {
-                return grid[x, y];
+                if (grid[x, y].ContainsPosition(position))
+                {
+                    return grid[x, y];
+                }
             }
         }
 
@@ -143,7 +146,7 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        if (closestDistance > cellSize)
+        if (closestDistance > cellSize *2)          //너무 멀면 null 반환
         {
             return null;
         }
@@ -175,15 +178,15 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void RemoveRank(DraggableRank rank)
+    public void RemoveRank(DraggableRank rank)          //계급장 제거
     {
         if (rank == null) return;
 
-        if (rank.currentCell != null)
+        if (rank.currentCell != null)           //칸에서 제거
         {
             rank.currentCell.currentRank = null;
 
-            Destroy(rank.gameObject);
+            Destroy(rank.gameObject);           //게임 오브젝트 제거
         }
     }
 }
